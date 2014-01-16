@@ -1,0 +1,243 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" media="all" href="css/styles.css">
+	<script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+	<script type="text/javascript" src="js/minesweeper.js"></script>
+	
+<script type="text/javascript">
+// intialize random mine positions
+var rows = 8;
+var cols = 8;
+var turnnum = 1;
+var	clicked = 0;
+var	gameover = 0;
+
+$(document).ready(function() {			
+	var maxbox=rows*cols;
+	var nummines = 10;
+	var rnarr = new Array();
+	
+	// creates random number from 0 to maxbox-1
+	// please note the first element starts at index 0
+	rnarr[0]=Math.floor(Math.random()*maxbox);
+	// alert(rnarr[0]);
+	$(".foo:eq("+rnarr[0]+")").toggleClass("mine");
+	for (var i=1; i<nummines; i++) {			
+		do {
+			rnarr[i]=Math.floor(Math.random()*(maxbox+1));
+		} while (rnarr.indexOf(rnarr[i])==-1); // keep repeating until you create a value in array that doesn't exist yet
+		
+		// alert(rnarr[i]);
+		$(".foo:eq("+rnarr[i]+")").toggleClass("mine");
+	}				
+	
+	$('#restart').click(function() {	
+		generateGame(rows,cols,nummines);
+	});
+	
+	$('#undo').click(function() {
+		if (turnnum != 1) {
+			turnnum = turnnum - 1;		
+			$('#turnnum').html('Turn ' + turnnum);
+			$("p#notes").html("I just undid my last turn.");
+			
+			$(".chosen").first().html("?");
+			$(".chosen").first().removeClass("chosen");
+		} else {
+			$("p#notes").html("I cannot take back any more turns.");
+		}
+	});
+	
+	$('#cheat').click(function() {
+		if ($("#cheat").text()=="Cheat") {			
+			$(".mine:contains('?')").html("!");			
+			$("td:contains('!')").css("background-color","red");
+			$("#cheat").html("Uncheat");
+		} else {
+			$("td:contains('!')").css("background-color","yellow");
+			$(".mine:contains('!')").html("?");			
+			$("#cheat").html("Cheat");
+		}
+	});
+	
+	$('#confirm').click(function() {
+		
+		// add turn or show message to take turn
+		if (clicked == 0) { 
+			$("p#notes").html("I have not taken a guess yet.");
+		} else { // add a turn and reset click counter
+			turnnum = updateText(turnnum);
+			clicked = 0;
+		}
+			
+		// check entries
+		// you lose
+		$(".mine:contains('X')").each(function() {
+			alert("BOOM! I lose! I exploded on a mine.");
+			$("td.unmarked").find(".mine").html("!");
+			$("td:contains('!')").css("background-color","red");
+			$("p#notes").html("BOOM! I lose! I exploded on a mine.");
+			gameover = 1;
+		}); 
+		
+		// run algorithm to determine number of mines close by
+		if (gameover == 0) {
+			var listItem = $(".foo:contains('X')");
+			var boxNum = $(".foo").index(listItem);
+			
+			adjmines = testMines(rows, cols, boxNum);
+			alert("First run!");
+			alert(adjmines);
+						
+			/*
+			if (adjmines==0) {
+				// note: need to test conditions as well
+				// right
+				if ((boxNum%cols+1)<cols) {
+					testMines(rows, cols, boxNum+1);
+				}
+				
+				alert('Right finished.');
+				
+				// left
+				if ((boxNum%cols)>0) {
+					adjmines = testMines(rows, cols, boxNum-1);
+				}
+				
+				alert('Left finished.');
+				
+				// top
+				if ((boxNum-cols+1)>0) {
+					testMines(rows, cols, boxNum-cols);
+				}
+				
+				// top right
+				if ((boxNum-cols+1)>0 && (boxNum%cols+1)<cols) {	
+					testMines(rows, cols, boxNum-cols+1);
+				}
+									
+				// top left
+				if ((boxNum-cols+1)>0 && (boxNum%cols)>0) {
+					testMines(rows, cols, boxNum-cols-1);
+				}
+				
+				// bottom
+				if ((boxNum+cols)<maxbox) {
+					testMines(rows, cols, boxNum+cols);
+				}
+				
+				// bottom Left
+				if ((boxNum+cols)<maxbox && (boxNum%cols)>0) {
+					testMines(rows, cols, boxNum+cols+1);
+				}
+				
+				// bottom right
+				if ((boxNum+cols)<maxbox && (boxNum%cols+1)<cols) {	
+					testMines(rows, cols, boxNum+cols-1);
+				}
+			}
+			*/
+			
+			// }
+			
+			// $(".foo:contains('X'):parent").eq(1).fadeTo(1500,0.3);
+			// $(".foo:contains('X')").html(adjmines);
+			
+		}
+		
+		// you win
+		if (turnnum == (maxbox-nummines+1)) {
+			$("td.unmarked").find(".mine").html("!");
+			$("p#notes").html("I win! The rest are all mines.");
+			gameover = 1;
+		}
+	});
+	
+	
+	// left click guesses cell is not a mine
+	$("td.unmarked").click(function() {
+		// alert($(this).find(".foo").html()); 
+		if ($(this).find(".foo").html()=="X" && clicked==1 && gameover==0) {
+			$("p#notes").html("I just undid my move. Let me choose another box that is not a mine.");
+			$(this).find(".foo").html("?");
+			clicked = 0;			
+		} else if ($(this).find(".foo").html()=="?" && clicked==0 && gameover==0) {
+			$("p#notes").html("I just assumed this box is not a mine. I can only choose one box per turn.");
+			$(this).find(".foo").html("X");						
+			// $(this).find(".foo").addClass("chosen");
+			clicked = 1;
+		} else if ($(this).find(".foo").html()=="1" && gameover==0) { // if you click on a number.
+			$("p#notes").html("I have already guessed this box in a previous turn.");
+		} else if (gameover==0) {
+			$("p#notes").html("I can't guess another box until I deselect my currently guessed box.");
+		}
+	});
+	
+	
+	// right click guesses cell is a mine
+	
+	
+			
+			
+	
+		
+		
+		
+	// change instructions
+	$("p#rules").html("Rules are simple! Find all " + nummines + " within the " + rows + "x" + cols + " square.");	
+});
+
+	
+	
+</script>
+	
+</head>
+
+<body>
+<h1>Minesweeper</h1>
+<p id='rules'>Rules are simple! Find all 3 mines within the 4 x 4 square.</p>
+<ul>
+	<li>? = Have not guessed yet</li>
+	<li>X = Guessed to be not a mine</li>
+	<li>! = Guessed to be a mine</li>
+	<li># = A number that shows the number of mines around the square</li>
+</ul>
+
+<p id='turnnum'>Turn 1</p>
+<script type="text/javascript">
+
+document.write("<table>");
+for (var i=0;i<rows;i++) {
+	document.write("<tr>");
+	for(var j=0; j<cols; j++){
+		document.write("<td class='unmarked'><p class='foo'>?</p></td>");
+	}
+	document.write("</tr>");
+}
+document.write("</table>");
+
+</script>
+
+<button type='button' id='confirm'>Validate</button>
+<button type='button' id='undo'>Undo</button>
+<button type='button' id='cheat'>Cheat</button>
+<button type='button' id='restart'>New Game</button>
+
+<h3>Notes:</h3>
+<p id='notes'></p>
+
+<script type="text/javascript">
+	$(function() {
+		// createButton();
+		// createTable();
+		
+		
+		// updateTable();
+	});
+	
+</script>
+
+
+</body>
+
+</html>

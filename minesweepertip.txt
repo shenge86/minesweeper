@@ -1,0 +1,11 @@
+2 Dimensional array
+1 is mine
+0 is not mine
+
+(1,1) = 5
+
+Define a map object.
+
+recursive function checks x and y.
+if (2,1) is adjacent to it, then add to another 2D array of tested or not
+recursive function only checks new adjacent arrays that doesn't exist in the 2D array of tested or not
